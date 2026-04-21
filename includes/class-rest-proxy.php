@@ -94,7 +94,7 @@ class AI_SEO_Tool_REST_Proxy {
     // ── Proxy helpers ──
 
     private static function get_backend_url(): string {
-        return rtrim( get_option( 'ai_seo_tool_backend_url', '' ), '/' );
+        return AI_SEO_TOOL_BACKEND_URL;
     }
 
     private static function get_api_key(): string {
@@ -104,7 +104,7 @@ class AI_SEO_Tool_REST_Proxy {
     private static function proxy_get( string $path ): \WP_REST_Response {
         $api_key = self::get_api_key();
         $backend = self::get_backend_url();
-        if ( empty( $api_key ) || empty( $backend ) ) {
+        if ( empty( $api_key ) ) {
             return new \WP_REST_Response( array( 'error' => 'Not connected. Configure your API key in Settings.' ), 401 );
         }
         $response = wp_remote_get( $backend . $path, array(
@@ -120,7 +120,7 @@ class AI_SEO_Tool_REST_Proxy {
     private static function proxy_post( string $path, array $body = array() ): \WP_REST_Response {
         $api_key = self::get_api_key();
         $backend = self::get_backend_url();
-        if ( empty( $api_key ) || empty( $backend ) ) {
+        if ( empty( $api_key ) ) {
             return new \WP_REST_Response( array( 'error' => 'Not connected. Configure your API key in Settings.' ), 401 );
         }
         $response = wp_remote_post( $backend . $path, array(
@@ -144,7 +144,18 @@ class AI_SEO_Tool_REST_Proxy {
         $status = wp_remote_retrieve_response_code( $response );
         $body   = json_decode( wp_remote_retrieve_body( $response ), true );
         if ( $body === null ) {
-            $body = array( 'error' => 'Invalid response from backend' );
+            $body = array( 'message' => 'Invalid response from backend', 'code' => 'backend_error' );
+        }
+        // Normalize FastAPI-style errors so apiFetch receives a proper `message` field.
+        if ( $status >= 400 ) {
+            if ( ! isset( $body['message'] ) ) {
+                $body['message'] = isset( $body['detail'] ) && is_string( $body['detail'] )
+                    ? $body['detail']
+                    : ( $body['error'] ?? 'Request failed' );
+            }
+            if ( ! isset( $body['code'] ) ) {
+                $body['code'] = 'backend_error';
+            }
         }
         return new \WP_REST_Response( $body, $status );
     }
@@ -192,16 +203,15 @@ class AI_SEO_Tool_REST_Proxy {
     // ── Connection management (not proxied — manages wp_options) ──
 
     public static function connect( \WP_REST_Request $request ): \WP_REST_Response {
-        $params      = $request->get_json_params();
-        $api_key     = isset( $params['api_key'] ) ? sanitize_text_field( $params['api_key'] ) : '';
-        $backend_url = isset( $params['backend_url'] ) ? esc_url_raw( $params['backend_url'] ) : '';
+        $params  = $request->get_json_params();
+        $api_key = isset( $params['api_key'] ) ? sanitize_text_field( $params['api_key'] ) : '';
 
-        if ( empty( $api_key ) || empty( $backend_url ) ) {
-            return new \WP_REST_Response( array( 'error' => 'API key and backend URL are required.' ), 400 );
+        if ( empty( $api_key ) ) {
+            return new \WP_REST_Response( array( 'error' => 'API key is required.' ), 400 );
         }
 
         // Validate the API key by calling /auth/me on the backend
-        $response = wp_remote_get( rtrim( $backend_url, '/' ) . '/auth/me', array(
+        $response = wp_remote_get( AI_SEO_TOOL_BACKEND_URL . '/auth/me', array(
             'headers' => array(
                 'Authorization' => 'Bearer ' . $api_key,
                 'Content-Type'  => 'application/json',
@@ -210,7 +220,7 @@ class AI_SEO_Tool_REST_Proxy {
         ) );
 
         if ( is_wp_error( $response ) ) {
-            return new \WP_REST_Response( array( 'error' => 'Could not connect to the AI SEO Tool backend. Verify the backend URL.' ), 502 );
+            return new \WP_REST_Response( array( 'error' => 'Could not connect to the AI SEO Tool backend.' ), 502 );
         }
 
         $status = wp_remote_retrieve_response_code( $response );
@@ -218,9 +228,7 @@ class AI_SEO_Tool_REST_Proxy {
             return new \WP_REST_Response( array( 'error' => 'Invalid API key. Generate a key from your AI SEO Tool account under Settings > API Keys.' ), 401 );
         }
 
-        // Save credentials
         update_option( 'ai_seo_tool_api_key', sanitize_text_field( $api_key ) );
-        update_option( 'ai_seo_tool_backend_url', esc_url_raw( rtrim( $backend_url, '/' ) ) );
 
         $user_data = json_decode( wp_remote_retrieve_body( $response ), true );
         return new \WP_REST_Response( array( 'status' => 'connected', 'user' => $user_data ), 200 );
@@ -228,14 +236,13 @@ class AI_SEO_Tool_REST_Proxy {
 
     public static function disconnect( \WP_REST_Request $request ): \WP_REST_Response {
         update_option( 'ai_seo_tool_api_key', '' );
-        update_option( 'ai_seo_tool_backend_url', '' );
         return new \WP_REST_Response( array( 'status' => 'disconnected' ), 200 );
     }
 
     public static function get_settings( \WP_REST_Request $request ): \WP_REST_Response {
         return new \WP_REST_Response( array(
             'connected'   => ! empty( self::get_api_key() ),
-            'backend_url' => self::get_backend_url(),
+            'backend_url' => AI_SEO_TOOL_BACKEND_URL,
             'site_url'    => get_site_url(),
         ), 200 );
     }

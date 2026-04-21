@@ -94,19 +94,6 @@ export default function TechnicalAuditTab( { siteId, plan } ) {
 
     return (
         <div>
-            {/* View Full Report link */}
-            <div style={ { textAlign: 'right', marginBottom: '8px' } }>
-                <a
-                    href={ `${ mainAppUrl }/dashboard?site=${ siteId }` }
-                    target="_blank"
-                    rel="noreferrer"
-                    style={ { fontSize: '12px', color: '#757575', textDecoration: 'none' } }
-                    onMouseOver={ ( e ) => { e.target.style.textDecoration = 'underline'; } }
-                    onMouseOut={ ( e ) => { e.target.style.textDecoration = 'none'; } }
-                >
-                    { __( 'View Full Report →', 'ai-seo-tool' ) }
-                </a>
-            </div>
 
             {/* 4 summary cards in 2×2 grid */}
             <div style={ { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px', marginBottom: '16px' } }>

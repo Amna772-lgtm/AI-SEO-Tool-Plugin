@@ -69,19 +69,6 @@ export default function HistoryTab( { plan } ) {
 
     return (
         <div>
-            {/* View Full Report link */}
-            <div style={ { textAlign: 'right', marginBottom: '8px' } }>
-                <a
-                    href={ `${ mainAppUrl }/history` }
-                    target="_blank"
-                    rel="noreferrer"
-                    style={ { fontSize: '12px', color: '#757575', textDecoration: 'none' } }
-                    onMouseOver={ ( e ) => { e.target.style.textDecoration = 'underline'; } }
-                    onMouseOut={ ( e ) => { e.target.style.textDecoration = 'none'; } }
-                >
-                    { __( 'View Full Report →', 'ai-seo-tool' ) }
-                </a>
-            </div>
 
             {/* Trend chart area — Pro plan only */}
             { isFree ? (

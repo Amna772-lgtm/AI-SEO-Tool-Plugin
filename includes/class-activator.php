@@ -15,8 +15,5 @@ class AI_SEO_Tool_Activator {
         if ( ! get_option( 'ai_seo_tool_api_key' ) ) {
             add_option( 'ai_seo_tool_api_key', '' );
         }
-        if ( ! get_option( 'ai_seo_tool_backend_url' ) ) {
-            add_option( 'ai_seo_tool_backend_url', '' );
-        }
     }
 }

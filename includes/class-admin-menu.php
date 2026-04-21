@@ -32,7 +32,6 @@ class AI_SEO_Tool_Admin_Menu {
     public static function render_page() {
         $current_page = isset( $_GET['page'] ) ? sanitize_key( $_GET['page'] ) : 'ai-seo-tool';
         echo '<div class="wrap">';
-        echo '<h1 class="wp-heading-inline">' . esc_html__( 'AI SEO Tool', 'ai-seo-tool' ) . '</h1>';
         echo '<div id="ai-seo-tool-root" data-page="' . esc_attr( $current_page ) . '"></div>';
         echo '</div>';
     }

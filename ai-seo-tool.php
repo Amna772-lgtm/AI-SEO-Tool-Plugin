@@ -21,6 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 define( 'AI_SEO_TOOL_VERSION', '1.0.0' );
 define( 'AI_SEO_TOOL_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'AI_SEO_TOOL_PLUGIN_URL', plugins_url( '/', __FILE__ ) );
+define( 'AI_SEO_TOOL_BACKEND_URL', 'http://localhost:8000' );
 
 require_once AI_SEO_TOOL_PLUGIN_DIR . 'includes/class-activator.php';
 require_once AI_SEO_TOOL_PLUGIN_DIR . 'includes/class-admin-menu.php';
@@ -63,7 +64,7 @@ function ai_seo_tool_enqueue_admin_scripts( $hook_suffix ) {
         'apiBase'    => rest_url( 'ai-seo-tool/v1' ),
         'nonce'      => wp_create_nonce( 'wp_rest' ),
         'pluginUrl'  => AI_SEO_TOOL_PLUGIN_URL,
-        'mainAppUrl' => get_option( 'ai_seo_tool_backend_url', '' ),
+        'mainAppUrl' => AI_SEO_TOOL_BACKEND_URL,
         'connected'  => ! empty( get_option( 'ai_seo_tool_api_key', '' ) ),
     ) );
 }

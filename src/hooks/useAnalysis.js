@@ -44,7 +44,14 @@ export default function useAnalysis( siteId, intervalMs = 3000 ) {
                 }
             } catch ( err ) {
                 if ( activeRef.current ) {
-                    timeoutRef.current = setTimeout( poll, intervalMs * 2 );
+                    const msg = err.message || err.detail || '';
+                    const isGone = msg.toLowerCase().includes( 'not found' ) || msg.toLowerCase().includes( 'crawl' );
+                    if ( isGone ) {
+                        setError( 'expired' );
+                        setStatus( 'expired' );
+                    } else {
+                        timeoutRef.current = setTimeout( poll, intervalMs * 2 );
+                    }
                 }
             }
         };
